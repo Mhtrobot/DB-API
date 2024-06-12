@@ -30,7 +30,6 @@ def read_user(user_id: int, db: Session = Depends(get_db)):
     user = db.query(models.USER).filter(models.USER.user_id == user_id).first()
     return user
 
-
 @app.post('/register/user')
 def create_user(user: schemas.UserBase, db: Session = Depends(get_db)):
     isTaken = db.query(models.USER).filter(models.USER.phone == user.phone).first()
@@ -76,3 +75,16 @@ def update_user(user_id: int, user: schemas.UserUpdate, db: Session = Depends(ge
     db.refresh(db_user)
     return db_user
 
+@app.delete("/users/${user_id}", response_model=schemas.UserBase)
+def delete_user(user_id: int, db: Session = Depends(get_db), current_user: models.USER = Depends(auth.get_current_user)):
+    db_user = db.query(models.USER).filter(models.USER.user_id == user_id).first()
+    if not db_user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    if db_user.email != current_user.email or db_user.phone != current_user.phone:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to take action")
+    db.delete(db_user)
+    db.commit()
+    return {
+        "message": "User deleted",
+        "user": db_user
+    }
