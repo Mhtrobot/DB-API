@@ -25,6 +25,12 @@ def read_root():
 def read_users(limit: int, db: Session = Depends(get_db)):
     return db.query(models.USER).limit(limit).all()
 
+@app.get('/users/{user_id}', response_model=schemas.UserBase)
+def read_user(user_id: int, db: Session = Depends(get_db)):
+    user = db.query(models.USER).filter(models.USER.user_id == user_id).first()
+    return user
+
+
 @app.post('/register/user')
 def create_user(user: schemas.UserBase, db: Session = Depends(get_db)):
     isTaken = db.query(models.USER).filter(models.USER.phone == user.phone).first()
