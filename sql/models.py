@@ -28,6 +28,7 @@ class Item(Base):
     about = Column(TEXT)
 
     owner = relationship("User", back_populates="items")
+    locations = relationship("Location", back_populates="item")
 
 class TypeList(Base):
     __tablename__ = 'type_list'
@@ -54,7 +55,7 @@ class Location(Base):
     exact_loc = Column(String(255), nullable=False)
     item_id = Column(Integer, ForeignKey('items.item_id'), nullable=False)
 
-    item = relationship("Item")
+    item = relationship("Item", back_populates="locations")
 
 class Feature(Base):
     __tablename__ = 'features'

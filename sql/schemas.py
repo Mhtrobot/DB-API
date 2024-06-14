@@ -43,7 +43,7 @@ class ItemBase(BaseModel):
     about: Optional[str]
 
 class ItemCreate(ItemBase):
-    pass
+    location: Optional['LocationCenter']
 
 class Item(ItemBase):
     item_id: int
@@ -66,15 +66,18 @@ class Type(BaseModel):
     class Config:
         orm_mode = True
 
-class Location(BaseModel):
-    location_id: int
+class LocationBase(BaseModel):
     state: str
     city: str
     exact_loc: str
-    item_id: int
 
+class Location(LocationBase):
+    location_id: int
+    item_id: int
     class Config:
         orm_mode = True
+class LocationCreate(LocationBase):
+    pass
 
 class Feature(BaseModel):
     feature_id: int
@@ -156,7 +159,6 @@ class Message(BaseModel):
         orm_mode = True
 
 class Like(BaseModel):
-    like_id: int
     user_id: int
     item_id: int
 
