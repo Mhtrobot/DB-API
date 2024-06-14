@@ -126,6 +126,5 @@ def search_houses(name: Optional[str] = None, state: Optional[str] = None, city:
         query = query.filter(models.Item.price >= min_price)
     if max_price is not None:
         query = query.filter(models.Item.price <= max_price)
-
     houses = query.all()
     return houses
