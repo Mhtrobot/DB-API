@@ -12,7 +12,7 @@ SECRET_KEY = "YOMAMAAHOE"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login-token")
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     if expires_delta is None:

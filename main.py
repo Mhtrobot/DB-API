@@ -1,5 +1,6 @@
 from datetime import timedelta
 from fastapi import FastAPI, Depends, HTTPException,status
+from fastapi.openapi.utils import get_openapi
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from typing import Annotated, List
@@ -39,7 +40,7 @@ def login_for_access_token(db: Annotated[Session, Depends(get_db)], form_data: O
     user = db.query(models.USER).filter(models.USER.email == form_data.username, models.USER.phone == form_data.password).first()
     if not user:
         raise HTTPException(
-            status_code= status.HTTP_401_UNAUTHORIZED,
+            status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or phone",
             headers={"WWW-Authenticate": "Bearer"}
         )
@@ -50,14 +51,15 @@ def login_for_access_token(db: Annotated[Session, Depends(get_db)], form_data: O
     return {
         "message": "Login Successful",
         "user_detail": user,
-        "access_token": access_token, "token_type": "bearer"}
+        "access_token": access_token, "token_type": "bearer"
+    }
 
-@app.get("/users/current", response_model=schemas.UserBase)
+@app.get("/loged-user", response_model=schemas.UserBase)
 def get_current_user(current_user: models.USER = Depends(auth.get_current_user)):
     return current_user
 
-@app.put('/user-update/${user_id}', response_model=schemas.UserUpdate)
-def update_user(user_id: int, user: schemas.UserUpdate, db: Session = Depends(get_db)):
+@app.put('/user-update/{user_id}', response_model=schemas.UserUpdate)
+def update_user(user_id: int, user: schemas.UserUpdate, db: Annotated[Session, Depends(get_db)]):
     db_user = db.query(models.USER).filter(models.USER.user_id == user_id).first()
     if not db_user:
         raise HTTPException(status_code= status.HTTP_404_NOT_FOUND, detail="User not found")
@@ -67,8 +69,8 @@ def update_user(user_id: int, user: schemas.UserUpdate, db: Session = Depends(ge
     db.refresh(db_user)
     return db_user
 
-@app.delete("/users/${user_id}", response_model=schemas.UserBase)
-def delete_user(user_id: int, db: Session = Depends(get_db), current_user: models.USER = Depends(auth.get_current_user)):
+@app.delete("/delete-users/{user_id}", response_model=schemas.UserBase)
+def delete_user(user_id: int, db: Annotated[Session, Depends(get_db)], current_user: models.USER = Depends(auth.get_current_user)):
     db_user = db.query(models.USER).filter(models.USER.user_id == user_id).first()
     if not db_user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
@@ -80,3 +82,28 @@ def delete_user(user_id: int, db: Session = Depends(get_db), current_user: model
         "message": "User deleted",
         "user": db_user
     }
+
+'''
+app.openapi_schema = None
+def custom_openapi():
+    if app.openapi_schema:
+        return app.openapi_schema
+    openapi_schema = get_openapi(
+        title='DB-API',
+        version='1.0.0',
+        description='Renting House System API',
+        routes=app.routes
+    )
+    openapi_schema["components"]["securitySchemes"] = {
+        "BearerAuth": {
+            "type": "http",
+            "scheme": "bearer",
+            "bearerFormat": "JWT"
+        }
+    }
+    openapi_schema["security"] = [{"BearerAuth": []}]
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
+
+app.openapi = custom_openapi
+'''
