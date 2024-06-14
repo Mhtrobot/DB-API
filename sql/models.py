@@ -27,8 +27,6 @@ class Item(Base):
     price = Column(DECIMAL(10, 2), nullable=False)
     about = Column(TEXT)
 
-    owner = relationship("User", back_populates="items")
-    locations = relationship("Location", back_populates="item")
 
 class TypeList(Base):
     __tablename__ = 'type_list'
@@ -55,7 +53,7 @@ class Location(Base):
     exact_loc = Column(String(255), nullable=False)
     item_id = Column(Integer, ForeignKey('items.item_id'), nullable=False)
 
-    item = relationship("Item", back_populates="locations")
+    #item = relationship("Item", back_populates="locations")
 
 class Feature(Base):
     __tablename__ = 'features'
@@ -95,8 +93,8 @@ class Rating(Base):
     total_rate = Column(Integer, nullable=False)
     user_id = Column(Integer, ForeignKey('users.user_id'), nullable=False)
 
-    item = relationship("Item")
-    user = relationship("User")
+    #item = relationship("Item")
+    #user = relationship("User")
 
 class Rate(Base):
     __tablename__ = 'rates'
@@ -107,8 +105,8 @@ class Rate(Base):
     item_id = Column(Integer, ForeignKey('items.item_id'), nullable=False)
     user_id = Column(Integer, ForeignKey('users.user_id'), nullable=False)
 
-    item = relationship("Item")
-    user = relationship("User")
+    #item = relationship("Item")
+    #user = relationship("User")
 
 class Property(Base):
     __tablename__ = 'properties'
@@ -117,7 +115,7 @@ class Property(Base):
     item_id = Column(Integer, ForeignKey('items.item_id'), nullable=False)
     status = Column(String(255), nullable=False)
 
-    item = relationship("Item")
+    #item = relationship("Item")
 
 class ItemDescription(Base):
     __tablename__ = 'item_description'
@@ -133,7 +131,7 @@ class ItemDescription(Base):
     persian_wc = Column(Integer, nullable=False)
     caption = Column(String(255), nullable=False)
 
-    item = relationship("Item")
+    #item = relationship("Item")
 
 class Message(Base):
     __tablename__ = 'messages'
@@ -144,9 +142,9 @@ class Message(Base):
     item_id = Column(Integer, ForeignKey('items.item_id'), nullable=False)
     text = Column(TEXT, nullable=False)
 
-    sender = relationship("User", foreign_keys=[sender_id])
-    receiver = relationship("User", foreign_keys=[receiver_id])
-    item = relationship("Item")
+    #sender = relationship("User", foreign_keys=[sender_id])
+    #receiver = relationship("User", foreign_keys=[receiver_id])
+    #item = relationship("Item")
 
 class Like(Base):
     __tablename__ = 'likes'
@@ -155,8 +153,8 @@ class Like(Base):
     user_id = Column(Integer, ForeignKey('users.user_id'), nullable=False)
     item_id = Column(Integer, ForeignKey('items.item_id'), nullable=False)
 
-    user = relationship("User")
-    item = relationship("Item")
+    #user = relationship("User")
+    #item = relationship("Item")
 
 class CommentSection(Base):
     __tablename__ = 'comment_section'
@@ -166,8 +164,8 @@ class CommentSection(Base):
     user_id = Column(Integer, ForeignKey('users.user_id'), nullable=False)
     comment = Column(TEXT, nullable=False)
 
-    item = relationship("Item")
-    user = relationship("User")
+    #item = relationship("Item")
+    #user = relationship("User")
 
 class Reservation(Base):
     __tablename__ = 'reservations'
@@ -180,8 +178,8 @@ class Reservation(Base):
     passengers_number = Column(Integer, nullable=False)
     final_price = Column(DECIMAL(10, 2), nullable=False)
 
-    renter = relationship("User")
-    item = relationship("Item")
+    #renter = relationship("User")
+    #item = relationship("Item")
 
 class Application(Base):
     __tablename__ = 'applications'
@@ -190,7 +188,7 @@ class Application(Base):
     res_id = Column(Integer, ForeignKey('reservations.res_id'), nullable=False)
     status = Column(String, nullable=False)
 
-    reservation = relationship("Reservation")
+    #reservation = relationship("Reservation")
 
 class Invoice(Base):
     __tablename__ = 'invoice'
@@ -202,8 +200,8 @@ class Invoice(Base):
     discount = Column(DECIMAL(10, 2), nullable=False)
     status = Column(String, nullable=False)
 
-    application = relationship("Application")
-    user = relationship("User")
+    #application = relationship("Application")
+    #user = relationship("User")
 
 class Payment(Base):
     __tablename__ = 'payment'
@@ -212,7 +210,7 @@ class Payment(Base):
     invoice_id = Column(Integer, ForeignKey('invoice.invoice_id'), nullable=False)
     date = Column(DATE, nullable=False)
 
-    invoice = relationship("Invoice")
+    #invoice = relationship("Invoice")
 
 class InvoiceLine(Base):
     __tablename__ = 'invoice_line'
@@ -220,4 +218,4 @@ class InvoiceLine(Base):
     invoice_line_id = Column(Integer, primary_key=True, index=True)
     payment_id = Column(Integer, ForeignKey('payment.payment_id'), nullable=False)
 
-    payment = relationship("Payment")
+    #payment = relationship("Payment")

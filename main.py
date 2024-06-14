@@ -3,7 +3,7 @@ from fastapi import FastAPI, Depends, HTTPException,status
 from fastapi.openapi.utils import get_openapi
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
-from typing import Annotated, List
+from typing import Annotated, List, Optional
 from sql import models, schemas, auth
 from sql.database import SessionLocal, engine, get_db
 
@@ -108,3 +108,24 @@ def custom_openapi():
 app.openapi = custom_openapi
 '''
 
+
+@app.get("/houses/", response_model=List[schemas.Item])
+def search_houses(name: Optional[str] = None, state: Optional[str] = None, city: Optional[str] = None,
+                  min_price: Optional[float] = None, max_price: Optional[float] = None, db: Session = Depends(get_db)):
+    query = db.query(models.Item)
+
+    if name:
+        query = query.filter(models.Item.name.contains(name))
+    if state or city:
+        query = query.join(models.Location)
+        if state:
+            query = query.filter(models.Location.state.contains(state))
+        if city:
+            query = query.filter(models.Location.city.contains(city))
+    if min_price is not None:
+        query = query.filter(models.Item.price >= min_price)
+    if max_price is not None:
+        query = query.filter(models.Item.price <= max_price)
+
+    houses = query.all()
+    return houses
