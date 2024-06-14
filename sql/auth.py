@@ -1,12 +1,12 @@
 
 from datetime import datetime, timedelta
-from typing import Optional
+from typing import Optional, Annotated
 from jose import JWTError, jwt
 from fastapi import HTTPException, Depends, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from . import models, schemas
-from .database import SessionLocal
+from .database import get_db
 
 SECRET_KEY = "YOMAMAAHOE"
 ALGORITHM = "HS256"
@@ -33,7 +33,7 @@ def verify_token(token: str, credentials_exception):
         raise credentials_exception
     return token_data
 
-def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(SessionLocal)):
+def get_current_user(db: Annotated[Session, Depends(get_db)], token: str = Depends(oauth2_scheme)):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",

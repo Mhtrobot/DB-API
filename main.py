@@ -4,34 +4,26 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from typing import Annotated, List
 from sql import models, schemas, auth
-from sql.database import SessionLocal, engine
+from sql.database import SessionLocal, engine, get_db
 
 app = FastAPI()
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-db_dependency = Annotated[SessionLocal, Depends(get_db)]
 
 @app.get('/')
 def read_root():
     return {'Hello': 'World'}
 
 @app.get('/users')
-def read_users(limit: int, db: Session = Depends(get_db)):
+def read_users(limit: int, db: Annotated[Session, Depends(get_db)]):
     return db.query(models.USER).limit(limit).all()
 
 @app.get('/users/{user_id}', response_model=schemas.UserBase)
-def read_user(user_id: int, db: Session = Depends(get_db)):
+def read_user(user_id: int, db: Annotated[Session, Depends(get_db)]):
     user = db.query(models.USER).filter(models.USER.user_id == user_id).first()
     return user
 
 @app.post('/register/user')
-def create_user(user: schemas.UserBase, db: Session = Depends(get_db)):
+def create_user(user: schemas.UserBase, db: Annotated[Session, Depends(get_db)]):
     isTaken = db.query(models.USER).filter(models.USER.phone == user.phone).first()
     if isTaken:
         raise HTTPException(status_code=404, detail=f"User with phone {user.phone} already exists")
@@ -43,7 +35,7 @@ def create_user(user: schemas.UserBase, db: Session = Depends(get_db)):
     return db_user
 
 @app.post('/login-token')
-def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+def login_for_access_token(db: Annotated[Session, Depends(get_db)], form_data: OAuth2PasswordRequestForm = Depends()):
     user = db.query(models.USER).filter(models.USER.email == form_data.username, models.USER.phone == form_data.password).first()
     if not user:
         raise HTTPException(
