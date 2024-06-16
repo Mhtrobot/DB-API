@@ -1,7 +1,8 @@
 from datetime import timedelta
-from fastapi import FastAPI, Depends, HTTPException,status
+from fastapi import FastAPI, Depends, HTTPException,status, Header
 from fastapi.openapi.utils import get_openapi
 from fastapi.security import OAuth2PasswordRequestForm
+from jose import JWTError
 from sqlalchemy.orm import Session
 from typing import Annotated, List, Optional
 from sql import models, schemas, auth
@@ -55,8 +56,23 @@ async def login_for_access_token(db: Annotated[Session, Depends(get_db)], form_d
     }
 
 @app.get("/loged-user", response_model=schemas.UserBase)
-async def get_current_user(current_user: models.USER = Depends(auth.get_current_user)):
-    return current_user
+async def get_current_user(db: Annotated[Session, Depends(get_db)], token: str = Header(...)):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = auth.jwt.decode(token, auth.SECRET_KEY, algorithms=[auth.ALGORITHM])
+        email: str = payload.get("sub")
+        if email is None:
+            raise credentials_exception
+    except JWTError:
+        raise credentials_exception
+    user = db.query(models.USER).filter(models.USER.email == email).first()
+    if user is None:
+        raise credentials_exception
+    return user
 
 @app.put('/user-update/{user_id}', response_model=schemas.UserUpdate)
 def update_user(user_id: int, user: schemas.UserUpdate, db: Annotated[Session, Depends(get_db)]):
@@ -69,20 +85,41 @@ def update_user(user_id: int, user: schemas.UserUpdate, db: Annotated[Session, D
     db.refresh(db_user)
     return db_user
 
-@app.delete("/delete-users/{user_id}", response_model=schemas.UserBase)
-async def delete_user(user_id: int, db: Annotated[Session, Depends(get_db)], current_user: models.USER = Depends(auth.get_current_user)):
-    db_user = db.query(models.USER).filter(models.USER.user_id == user_id).first()
+@app.delete("/delete-user", response_model=schemas.UserBase)
+async def delete_user(db: Annotated[Session, Depends(get_db)], token: str = Header(...)):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = auth.jwt.decode(token, auth.SECRET_KEY, algorithms=[auth.ALGORITHM])
+        email: str = payload.get("sub")
+        if email is None:
+            raise credentials_exception
+    except JWTError:
+        raise credentials_exception
+    current_user = db.query(models.USER).filter(models.USER.email == email).first()
+    if current_user is None:
+        raise credentials_exception
+        return False
+
+    db_user = db.query(models.USER).filter(models.USER.email == current_user.email, models.USER.phone == current_user.phone).first()
     if not db_user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     if db_user.email != current_user.email or db_user.phone != current_user.phone:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to take action")
+    # Delete likes associated with the user
+    db.query(models.Like).filter(models.Like.user_id == db_user.user_id).delete()
+
+    # Now delete the user
+    db.query(models.USER).filter(models.USER.user_id == db_user.user_id).delete()
     db.delete(db_user)
     db.commit()
     return {
         "message": "User deleted",
         "user": db_user
     }
-
 
 # Add the OpenAPI customization
 def custom_openapi():
