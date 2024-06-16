@@ -36,7 +36,7 @@ def create_user(user: schemas.UserBase, db: Annotated[Session, Depends(get_db)])
     return db_user
 
 @app.post('/login-token')
-def login_for_access_token(db: Annotated[Session, Depends(get_db)], form_data: OAuth2PasswordRequestForm = Depends()):
+async def login_for_access_token(db: Annotated[Session, Depends(get_db)], form_data: OAuth2PasswordRequestForm = Depends()):
     user = db.query(models.USER).filter(models.USER.email == form_data.username, models.USER.phone == form_data.password).first()
     if not user:
         raise HTTPException(
@@ -55,7 +55,7 @@ def login_for_access_token(db: Annotated[Session, Depends(get_db)], form_data: O
     }
 
 @app.get("/loged-user", response_model=schemas.UserBase)
-def get_current_user(current_user: models.USER = Depends(auth.get_current_user)):
+async def get_current_user(current_user: models.USER = Depends(auth.get_current_user)):
     return current_user
 
 @app.put('/user-update/{user_id}', response_model=schemas.UserUpdate)
@@ -70,7 +70,7 @@ def update_user(user_id: int, user: schemas.UserUpdate, db: Annotated[Session, D
     return db_user
 
 @app.delete("/delete-users/{user_id}", response_model=schemas.UserBase)
-def delete_user(user_id: int, db: Annotated[Session, Depends(get_db)], current_user: models.USER = Depends(auth.get_current_user)):
+async def delete_user(user_id: int, db: Annotated[Session, Depends(get_db)], current_user: models.USER = Depends(auth.get_current_user)):
     db_user = db.query(models.USER).filter(models.USER.user_id == user_id).first()
     if not db_user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
@@ -83,8 +83,8 @@ def delete_user(user_id: int, db: Annotated[Session, Depends(get_db)], current_u
         "user": db_user
     }
 
-'''
-app.openapi_schema = None
+
+# Add the OpenAPI customization
 def custom_openapi():
     if app.openapi_schema:
         return app.openapi_schema
@@ -106,7 +106,6 @@ def custom_openapi():
     return app.openapi_schema
 
 app.openapi = custom_openapi
-'''
 
 
 @app.get("/houses/", response_model=List[schemas.Item])
