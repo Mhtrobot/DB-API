@@ -18,11 +18,20 @@ class USER(Base):
     home_phone = Column(String(11), nullable=True)
     description = Column(TEXT, nullable=True)
 
+    #items = relationship('Item', back_populates='users', cascade='all, delete-orphan')
+    #rating = relationship('Rating', back_populates='users', cascade='all, delete-orphan')
+    #rate = relationship('Rate', back_populates='users', cascade='all,delete-orphan')
+    #message = relationship('Message', back_populates='users', cascade='all,delete-orphan')
+    #like = relationship('Like', back_populates='users', cascade='all,delete-orphan')
+    #comment = relationship('CommentSection', back_populates='users', cascade='all,delete-orphan')
+    #reservation = relationship('Reservation', back_populates='users', cascade='all,delete-orphan')
+    #invoice = relationship('Invoice', back_populates='users', cascade='all,delete-orphan')
+
 class Item(Base):
     __tablename__ = 'items'
 
     item_id = Column(Integer, primary_key=True, index=True)
-    owner_id = Column(Integer, ForeignKey('users.user_id'), nullable=False)
+    owner_id = Column(Integer, ForeignKey('users.user_id', ondelete='CASCADE'), nullable=False)
     name = Column(String(50), nullable=False)
     price = Column(DECIMAL(10, 2), nullable=False)
     about = Column(TEXT)
@@ -52,8 +61,6 @@ class Location(Base):
     city = Column(String(50), nullable=False)
     exact_loc = Column(String(255), nullable=False)
     item_id = Column(Integer, ForeignKey('items.item_id'), nullable=False)
-
-    #item = relationship("Item", back_populates="locations")
 
 class Feature(Base):
     __tablename__ = 'features'
@@ -91,10 +98,8 @@ class Rating(Base):
     rating_id = Column(Integer, primary_key=True, index=True)
     item_id = Column(Integer, ForeignKey('items.item_id'), nullable=False)
     total_rate = Column(Integer, nullable=False)
-    user_id = Column(Integer, ForeignKey('users.user_id'), nullable=False)
+    user_id = Column(Integer, ForeignKey('users.user_id', ondelete='CASCADE'), nullable=False)
 
-    #item = relationship("Item")
-    #user = relationship("User")
 
 class Rate(Base):
     __tablename__ = 'rates'
@@ -103,10 +108,8 @@ class Rate(Base):
     rate_title = Column(String(255), nullable=False)
     rate = Column(Integer, nullable=False)
     item_id = Column(Integer, ForeignKey('items.item_id'), nullable=False)
-    user_id = Column(Integer, ForeignKey('users.user_id'), nullable=False)
+    user_id = Column(Integer, ForeignKey('users.user_id', ondelete='CASCADE'), nullable=False)
 
-    #item = relationship("Item")
-    #user = relationship("User")
 
 class Property(Base):
     __tablename__ = 'properties'
@@ -114,8 +117,6 @@ class Property(Base):
     property_id = Column(Integer, primary_key=True, index=True)
     item_id = Column(Integer, ForeignKey('items.item_id'), nullable=False)
     status = Column(String(255), nullable=False)
-
-    #item = relationship("Item")
 
 class ItemDescription(Base):
     __tablename__ = 'item_description'
@@ -131,55 +132,45 @@ class ItemDescription(Base):
     persian_wc = Column(Integer, nullable=False)
     caption = Column(String(255), nullable=False)
 
-    #item = relationship("Item")
 
 class Message(Base):
     __tablename__ = 'messages'
 
     message_id = Column(Integer, primary_key=True, index=True)
-    sender_id = Column(Integer, ForeignKey('users.user_id'), nullable=False)
-    receiver_id = Column(Integer, ForeignKey('users.user_id'), nullable=False)
+    sender_id = Column(Integer, ForeignKey('users.user_id', ondelete='CASCADE'), nullable=False)
+    receiver_id = Column(Integer, ForeignKey('users.user_id', ondelete='CASCADE'), nullable=False)
     item_id = Column(Integer, ForeignKey('items.item_id'), nullable=False)
     text = Column(TEXT, nullable=False)
 
-    #sender = relationship("User", foreign_keys=[sender_id])
-    #receiver = relationship("User", foreign_keys=[receiver_id])
-    #item = relationship("Item")
 
 class Like(Base):
     __tablename__ = 'likes'
 
     like_id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey('users.user_id'), nullable=False)
+    user_id = Column(Integer, ForeignKey('users.user_id', ondelete='CASCADE'), nullable=False)
     item_id = Column(Integer, ForeignKey('items.item_id'), nullable=False)
 
-    #user = relationship("User")
-    #item = relationship("Item")
 
 class CommentSection(Base):
     __tablename__ = 'comment_section'
 
     comment_id = Column(Integer, primary_key=True, index=True)
     item_id = Column(Integer, ForeignKey('items.item_id'), nullable=False)
-    user_id = Column(Integer, ForeignKey('users.user_id'), nullable=False)
+    user_id = Column(Integer, ForeignKey('users.user_id', ondelete='CASCADE'), nullable=False)
     comment = Column(TEXT, nullable=False)
 
-    #item = relationship("Item")
-    #user = relationship("User")
 
 class Reservation(Base):
     __tablename__ = 'reservations'
 
     res_id = Column(Integer, primary_key=True, index=True)
-    renter_id = Column(Integer, ForeignKey('users.user_id'), nullable=False)
+    renter_id = Column(Integer, ForeignKey('users.user_id', ondelete='CASCADE'), nullable=False)
     item_id = Column(Integer, ForeignKey('items.item_id'), nullable=False)
     entry_date = Column(DATE, nullable=False)
     exit_date = Column(DATE, nullable=False)
     passengers_number = Column(Integer, nullable=False)
     final_price = Column(DECIMAL(10, 2), nullable=False)
 
-    #renter = relationship("User")
-    #item = relationship("Item")
 
 class Application(Base):
     __tablename__ = 'applications'
@@ -188,20 +179,17 @@ class Application(Base):
     res_id = Column(Integer, ForeignKey('reservations.res_id'), nullable=False)
     status = Column(String, nullable=False)
 
-    #reservation = relationship("Reservation")
 
 class Invoice(Base):
     __tablename__ = 'invoice'
 
     invoice_id = Column(Integer, primary_key=True, index=True)
     app_id = Column(Integer, ForeignKey('applications.app_id'), nullable=False)
-    user_id = Column(Integer, ForeignKey('users.user_id'), nullable=False)
+    user_id = Column(Integer, ForeignKey('users.user_id', ondelete='CASCADE'), nullable=False)
     date = Column(DATE, nullable=False)
     discount = Column(DECIMAL(10, 2), nullable=False)
     status = Column(String, nullable=False)
 
-    #application = relationship("Application")
-    #user = relationship("User")
 
 class Payment(Base):
     __tablename__ = 'payment'
@@ -210,7 +198,6 @@ class Payment(Base):
     invoice_id = Column(Integer, ForeignKey('invoice.invoice_id'), nullable=False)
     date = Column(DATE, nullable=False)
 
-    #invoice = relationship("Invoice")
 
 class InvoiceLine(Base):
     __tablename__ = 'invoice_line'

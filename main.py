@@ -85,7 +85,7 @@ def update_user(user_id: int, user: schemas.UserUpdate, db: Annotated[Session, D
     db.refresh(db_user)
     return db_user
 
-@app.delete("/delete-user", response_model=schemas.UserBase)
+@app.delete("/delete-user")
 async def delete_user(db: Annotated[Session, Depends(get_db)], token: str = Header(...)):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -109,6 +109,16 @@ async def delete_user(db: Annotated[Session, Depends(get_db)], token: str = Head
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     if db_user.email != current_user.email or db_user.phone != current_user.phone:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to take action")
+    #deleting other relations
+    db.query(models.Like).filter(models.Like.user_id == db_user.user_id).delete()
+    db.query(models.Item).filter(models.Item.owner_id == db_user.user_id).delete()
+    db.query(models.Rating).filter(models.Rating.user_id == db_user.user_id).delete()
+    db.query(models.Rate).filter(models.Rate.user_id == db_user.user_id).delete()
+    db.query(models.Message).filter(models.Message.sender_id == db_user.user_id or models.Message.receiver_id == db_user.user_id).delete()
+    db.query(models.CommentSection).filter(models.CommentSection.user_id == db_user.user_id).delete()
+    db.query(models.Reservation).filter(models.Reservation.renter_id == db_user.user_id).delete()
+    db.query(models.Invoice).filter(models.Invoice.user_id == db_user.user_id).delete()
+
 
     db.delete(db_user)
     db.commit()
