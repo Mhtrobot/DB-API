@@ -217,5 +217,3 @@ class InvoiceLine(Base):
 
     invoice_line_id = Column(Integer, primary_key=True, index=True)
     payment_id = Column(Integer, ForeignKey('payment.payment_id'), nullable=False)
-
-    #payment = relationship("Payment")
