@@ -109,11 +109,7 @@ async def delete_user(db: Annotated[Session, Depends(get_db)], token: str = Head
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     if db_user.email != current_user.email or db_user.phone != current_user.phone:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to take action")
-    # Delete likes associated with the user
-    db.query(models.Like).filter(models.Like.user_id == db_user.user_id).delete()
 
-    # Now delete the user
-    db.query(models.USER).filter(models.USER.user_id == db_user.user_id).delete()
     db.delete(db_user)
     db.commit()
     return {
