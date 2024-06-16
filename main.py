@@ -128,3 +128,45 @@ def search_houses(name: Optional[str] = None, state: Optional[str] = None, city:
         query = query.filter(models.Item.price <= max_price)
     houses = query.all()
     return houses
+
+@app.get("/users/{user_id}/travels", response_model=List[schemas.Reservation])
+def get_travels(user_id: int, db: Session =Depends(get_db)):
+    query = db.query(models.Reservation).filter(
+        models.Reservation.renter_id == user_id ,
+         models.Application.res_id == models.Reservation.res_id,
+         models.Invoice.app_id == models.Application.app_id,
+         models.Invoice.status == 'paid' and models.Application.status == 'approved'
+    ).all()
+    return query
+
+@app.get('/messages/{host_id}/{sender}', response_model=List[schemas.Message])
+def get_messages_of_specific_user(host_id: int, sender: int, db: Session =Depends(get_db)):
+    query = db.query(models.Message).filter(models.Message.receiver_id == host_id , models.Message.sender_id == sender , models.Message.receiver_id == models.Item.owner_id).all()
+    return query
+
+@app.get('/all-messages/{host_id}', response_model=List[schemas.Message])
+def get_all_messages(host_id: int, db: Session =Depends(get_db)):
+    query = db.query(models.Message).filter(models.Message.receiver_id == host_id, models.Message.receiver_id == models.Item.owner_id).all()
+    return query
+
+
+@app.post("/create-house", response_model=schemas.Item)
+def create_house(item: schemas.ItemCreate, db: Annotated[Session, Depends(get_db)]):
+    if db.query(models.Item).filter(models.Item.name == item.name, models.Item.about == item.about).first():
+        raise HTTPException(status_code=403, detail='Item already exists')
+    db_item = models.Item(**item.dict())
+    db.add(db_item)
+    db.commit()
+    db.refresh(db_item)
+    return db_item
+
+@app.post("/favorites/add", response_model=schemas.Like)
+def add_to_favorites(like: schemas.Like, db: Annotated[Session, Depends(get_db)]):
+    query = db.query(models.Like).filter(models.Like.user_id == like.user_id, models.Like.item_id == like.item_id).first()
+    if query:
+        raise HTTPException(status_code=403, detail='this item is already favorited')
+    db_like = models.Like(**like.dict())
+    db.add(db_like)
+    db.commit()
+    db.refresh(db_like)
+    return db_like

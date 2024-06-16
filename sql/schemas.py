@@ -43,7 +43,7 @@ class ItemBase(BaseModel):
     about: Optional[str]
 
 class ItemCreate(ItemBase):
-    location: Optional['LocationCenter']
+    pass
 
 class Item(ItemBase):
     item_id: int
