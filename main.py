@@ -108,6 +108,7 @@ def custom_openapi():
 app.openapi = custom_openapi
 '''
 
+
 @app.get("/houses/", response_model=List[schemas.Item])
 def search_houses(name: Optional[str] = None, state: Optional[str] = None, city: Optional[str] = None,
                   min_price: Optional[float] = None, max_price: Optional[float] = None, db: Session = Depends(get_db)):
